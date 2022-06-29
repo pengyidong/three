@@ -72,7 +72,7 @@ controls.enableDamping = true;
 
 // 添加坐标轴辅助器
 const axesHelper = new THREE.AxesHelper(5);
-scene.add(axesHelper)  
+scene.add(axesHelper)
 
 
 // window.addEventListener("dblclick", () => {

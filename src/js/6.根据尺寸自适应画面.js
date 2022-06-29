@@ -3,8 +3,7 @@ import * as THREE from "three"
 import {
     OrbitControls
 } from 'three/examples/jsm/controls/OrbitControls'
-// 导入dat.gui
-import * as dat from "dat.gui"
+// 导入动画库
 import gsap from "gsap"
 
 // 1.创建城景
@@ -16,7 +15,7 @@ const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerH
 camera.position.set(0, 0, 10);
 scene.add(camera);
 
-// 添加物体 
+// 添加物体
 // 创建几何体
 const cubeGeometry = new THREE.BoxGeometry();
 const cubeMaterial = new THREE.MeshBasicMaterial({
@@ -26,37 +25,16 @@ const cubeMaterial = new THREE.MeshBasicMaterial({
 // 根据几何体和材质创建物体
 const cube = new THREE.Mesh(cubeGeometry, cubeMaterial);
 
+cube.position.x = 0;
 
+// 缩放
+// cube.scale.x = 5;
+
+// 旋转
+// cube.rotation.set(Math.PI / 4, 0, 0)
 
 // 将几何体添加到场景中
 scene.add(cube)
-
-const gui = new dat.GUI();
-gui.add(cube.position, "x").min(0).max(5).step(0.01).name("移动X轴坐标").onChange(e => {
-    console.log(`移动中 :>> `, e)
-}).onFinishChange(e => {
-    console.log(`停止 :>> `, e)
-});
-
-const params = {
-    color: '#FFFF00',
-    fn: () => {
-        gsap.to(cube.position, {
-            x: 5,
-            duration: 2,
-            yoyo: true,
-            repeat: -1
-        })
-    }
-}
-gui.addColor(params, "color").onChange(e => {
-    console.log(`修改颜色 :>> `, e)
-    cube.material.color.set(e);
-})
-gui.add(cube, "visible").name('是否显示')
-gui.add(params, 'fn').name('动画')
-let folder = gui.addFolder("设置立方体")
-folder.add(cube.material,'wireframe')
 
 // 初始化渲染器
 const renderer = new THREE.WebGLRenderer();
@@ -72,19 +50,40 @@ controls.enableDamping = true;
 
 // 添加坐标轴辅助器
 const axesHelper = new THREE.AxesHelper(5);
-scene.add(axesHelper)  
+scene.add(axesHelper)
 
+// 设置动画
+let animation = gsap.to(cube.position, {
+    x: 5,
+    duration: 5,
+    ease: 'power1.inOut',
+    // 循环次数 -1为无限次
+    repeat: 3,
+    // 往返
+    yoyo: true,
+    // 延迟
+    delay: 2,
+    onComplete: () => {
+        console.log(`动画结束 :>> `)
+    },
+    onStart: () => {
+        console.log(`动画开始 :>> `)
+    }
+})
 
-// window.addEventListener("dblclick", () => {
-//     // 双击进入/退出全屏
-//     const Fullscreen = document.fullscreenElement;
-//     if (!Fullscreen) {
-//         renderer.domElement.requestFullscreen();
-//     } else {
-//         document.exitFullscreen();
-//     }
+gsap.to(cube.rotation, {
+    z: -2 * Math.PI,
+    duration: 5,
+    ease: 'power1.inOut'
+})
 
-// })
+window.addEventListener("dblclick", () => {
+    if (animation.isActive()) {
+        animation.pause();
+    } else {
+        animation.resume()
+    }
+})
 
 function render() {
     controls.update();
@@ -97,6 +96,7 @@ render()
 
 // 监听画面变化，更新渲染画面
 window.addEventListener('resize', () => {
+    console.log(`画面变化 :>> `)
     // 更新摄像头
     camera.aspect = window.innerWidth / window.innerHeight;
     // 更新摄像机的投影矩阵
