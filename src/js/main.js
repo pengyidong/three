@@ -3,106 +3,55 @@ import * as THREE from "three"
 import {
     OrbitControls
 } from 'three/examples/jsm/controls/OrbitControls'
-// 导入dat.gui
-import * as dat from "dat.gui"
-import gsap from "gsap"
+import {
+    GLTFLoader
+} from 'three/examples/jsm/loaders/GLTFLoader'
 
-// 1.创建城景
-const scene = new THREE.Scene();
-// 2.创建相机
-const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+let scene, camera, renderer, ambientLight;
 
-// 设置相机位置
-camera.position.set(0, 0, 10);
-scene.add(camera);
+const init = () => {
+    // scene
+    scene = new THREE.Scene();
+    scene.background = new THREE.Color(0x000000);
 
-// 添加物体 
-// 创建几何体
-const cubeGeometry = new THREE.BoxGeometry();
-const cubeMaterial = new THREE.MeshBasicMaterial({
-    color: 0xffff00
-});
+    // Renderer
+    renderer = new THREE.WebGLRenderer({
+        antialias: true
+    })
+    renderer.setSize(window.innerWidth, window.innerHeight)
+    document.body.appendChild(renderer.domElement)
 
-// 根据几何体和材质创建物体
-const cube = new THREE.Mesh(cubeGeometry, cubeMaterial);
+    // Camera
+    const aspect = window.innerWidth / window.innerHeight;
+    camera = new THREE.PerspectiveCamera(60, aspect, 0.01, 5000)
+    camera.position.set(0.5, 0, 0)
 
+    // Light
+    ambientLight = new THREE.AmbientLight(0xaaaa, 20)
+    scene.add(ambientLight)
 
+    // 创建轨道控制器
+    const controls = new OrbitControls(camera, renderer.domElement);
+    // 设置控制器阻尼
+    controls.enableDamping = true;
 
-// 将几何体添加到场景中
-scene.add(cube)
+    const loader = new GLTFLoader();
+    // loader.load('LittlestTokyo.glb', (res) => {
+    //     console.log(`res :>> `, res)
+    //     scene.add(res.scene);
+    //     renderer.render(scene, camera)
 
-const gui = new dat.GUI();
-gui.add(cube.position, "x").min(0).max(5).step(0.01).name("移动X轴坐标").onChange(e => {
-    console.log(`移动中 :>> `, e)
-}).onFinishChange(e => {
-    console.log(`停止 :>> `, e)
-});
-
-const params = {
-    color: '#FFFF00',
-    fn: () => {
-        gsap.to(cube.position, {
-            x: 5,
-            duration: 2,
-            yoyo: true,
-            repeat: -1
-        })
-    }
-}
-gui.addColor(params, "color").onChange(e => {
-    console.log(`修改颜色 :>> `, e)
-    cube.material.color.set(e);
-})
-gui.add(cube, "visible").name('是否显示')
-gui.add(params, 'fn').name('动画')
-let folder = gui.addFolder("设置立方体")
-folder.add(cube.material,'wireframe')
-
-// 初始化渲染器
-const renderer = new THREE.WebGLRenderer();
-// 设置渲染的尺寸大小
-renderer.setSize(window.innerWidth, window.innerHeight);
-// 将webgl渲染的canvas内容添加到body上
-document.body.appendChild(renderer.domElement);
-
-// 创建轨道控制器
-const controls = new OrbitControls(camera, renderer.domElement);
-// 设置控制器阻尼
-controls.enableDamping = true;
-
-// 添加坐标轴辅助器
-const axesHelper = new THREE.AxesHelper(5);
-scene.add(axesHelper)  
-
-
-// window.addEventListener("dblclick", () => {
-//     // 双击进入/退出全屏
-//     const Fullscreen = document.fullscreenElement;
-//     if (!Fullscreen) {
-//         renderer.domElement.requestFullscreen();
-//     } else {
-//         document.exitFullscreen();
-//     }
-
-// })
-
-function render() {
-    controls.update();
-    renderer.render(scene, camera);
-    // 渲染下一帧的时候调用render函数 重新渲染
-    requestAnimationFrame(render);
+    // })
+    loader.load('../../../public/LittlestTokyo.glb', function (glb) {
+        console.log(glb.scene);
+        glb.scene.position.set(120, -400, 0)
+        scene.add(glb.scene);
+        renderer.render(scene, camera)
+    }, undefined, function (error) {
+        console.log(error);
+    });
 }
 
-render()
 
-// 监听画面变化，更新渲染画面
-window.addEventListener('resize', () => {
-    // 更新摄像头
-    camera.aspect = window.innerWidth / window.innerHeight;
-    // 更新摄像机的投影矩阵
-    camera.updateProjectionMatrix();
-    // 更新渲染器
-    renderer.setSize(window.innerWidth, window.innerHeight);
-    // 更新渲染器的像素比
-    renderer.setPixelRatio(window.devicePixelRatio);
-})
+
+init()
